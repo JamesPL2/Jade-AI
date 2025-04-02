@@ -1,0 +1,12 @@
+{
+  "name": "jade-ai",
+  "version": "1.0.0",
+  "description": "Projekt hiperinteligencji Jade",
+  "main": "electron-run.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^34.0.1"
+  }
+}

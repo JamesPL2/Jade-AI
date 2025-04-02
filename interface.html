@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jade AI</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        position: relative;
+        overflow: hidden; 
+      }
+
+      .container {   /*obszar chatu*/
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        position: relative;
+        margin-top: 30px;
+        width: 100%;
+      }
+
+      .chat-window {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto; 
+        display: flex;
+        flex-direction: column;
+        margin-top: 10px;
+        margin-bottom: 10px; 
+        max-height: calc(100vh - 130px); 
+      }
+
+      .input-area {
+        position: sticky; 
+        bottom: 0;
+        background: white;
+        padding: 10px;
+        align-items: center;
+        justify-content: space-between;
+        display: flex;
+        border-top: 1px solid #ccc;
+        min-height: 40px; 
+        resize: vertical; 
+      }
+
+      .input-area input[type="text"] {
+        flex: 1;
+        padding: 5px;
+        min-height: 15px; 
+        resize: vertical; 
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      .button {
+        padding: 5px 10px;
+        background: #ccc;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        text-align: center;
+      }
+
+      .button:hover {
+        background: #999;
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      .settings-icon, .topic-icon {
+        position: fixed;
+        top: 10px;  
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 20; 
+      }
+
+      .settings-icon {
+        right: 10px; 
+      }
+
+      .topic-icon {
+        left: 10px; 
+      }
+
+      .settings-window, .topic-window {
+        display: none;
+        position: absolute;
+        top: 10px; 
+        background: white;
+        border: 1px solid #ccc;
+        padding: 10px;
+        box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+        z-index: 10;
+      }
+
+      .topic-window {
+        left: 10px;
+        width: 200px;
+      }
+
+      .settings-window {
+        right: 10px;
+      }
+
+      .topic-button {
+        padding: 5px;
+        background-color: #ddd;
+        margin-bottom: 5px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        padding-left: 25px;
+        padding-right: 25px;
+      }
+
+      .topic-name {
+        text-align: center;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin: 0 5px;
+        max-width: 15ch;
+        min-width: 15ch;
+      }
+
+      .star-icon, .delete-icon {
+        display: none !important;
+      }
+
+      .topic-button:hover .star-icon,
+      .topic-button:hover .delete-icon {
+        display: block !important;
+      }
+
+      .topic-button .star-icon.active {
+        display: block !important;
+      }
+
+      .message {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        background: #e3e3e3;
+        word-wrap: break-word;
+        display: inline-block;
+        max-width: 75%;
+        width: fit-content;
+      }
+
+      .ai-message {
+        background: #e3e3e3;
+        padding: 10px;
+        padding-top: 15px;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        max-width: 75%;
+        display: inline-block;
+        position: relative;
+        width: fit-content;
+      }
+
+      .copy-icon {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        position: absolute;
+        left: 50%;
+        top: -12px;
+        transform: translateX(-50%);
+        cursor: pointer;
+        z-index: 1000;
+        font-size: 16px;
+        background-color: transparent;
+      }
+
+      .ai-message:hover .copy-icon {
+        opacity: 1;
+      }
+
+      .user-message {
+        align-self: flex-start;
+      }
+
+      .ai-message {
+        align-self: flex-end;
+      }
+
+      .language-selector {
+        margin-top: 10px;
+      }
+
+      .user-message img {
+        max-width: 50%;
+        width: auto;
+        height: auto;
+        display: block;
+        margin-top: 5px;
+        border-radius: 5px;
+      }
+	  
+	  #searchTopicInput { /* Styl dla pola wyszukiwania */
+        width: 100%;
+        padding: 5px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+
+      .editable {
+        cursor: text;
+        user-select: text;
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+
+      .editable:focus {
+        background-color: #fff;
+        outline: 2px solid #007bff;
+      }
+
+      .editable:hover {
+        background-color: #f0f0f0;
+      }
+      
+      /* Style dla sekcji personalizacji kolorów */
+      .color-customization {
+        margin-top: 20px;
+        border-top: 1px solid #ccc;
+        padding-top: 10px;
+      }
+      
+      .color-customization h3 {
+        margin-top: 5px;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+      
+      .color-option {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      .color-option label {
+        margin-right: 10px;
+        font-size: 14px;
+      }
+      
+      .color-option input[type="color"] {
+        width: 40px;
+        height: 25px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      
+      #resetColorsButton {
+        margin-top: 10px;
+        width: 100%;
+        background-color: #f4f4f4;
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="settings-icon" onclick="toggleSettings()">⚙️</span>
+        <span class="topic-icon" onclick="toggleTopics()">➡️</span>
+        <div class="topic-window" id="topicWindow">
+            <div class="topic-button" onclick="startNewConversation()" id="newConversationButton">
+                 Nowa rozmowa
+            </div>
+            <input type="text" id="searchTopicInput" placeholder="Wyszukaj temat..." oninput="filterTopics()">
+            <div id="topicList"></div> <!-- Miejsce na listę tematów -->
+        </div>
+        <div class="settings-window" id="settingsWindow">
+          <label id="labelUserName">${translations[language].userName}</label>
+            <input type="text" id="userName" placeholder="">
+            <button class="button" onclick="saveSettings()" id="saveButton">Save</button>
+
+            <div class="language-selector">
+                <label for="languageSelect" id="labelLanguage">Choose language:</label>
+                <select id="languageSelect" onchange="changeLanguage(this.value)">
+                    <option value="en">English</option>
+              <option value="zh">中文</option>
+                <option value="hi">हिंदी</option>
+              <option value="es">Español</option>
+             <option value="pl">Polski</option>
+
+                </select>
+            </div>
+            
+            <div class="color-customization">
+                <h3 id="labelCustomization">Customization</h3>
+                
+                <div class="color-option">
+                    <label for="buttonColor" id="labelButtonColor">Button color:</label>
+                    <input type="color" id="buttonColor" value="#cccccc">
+                </div>
+                
+                <div class="color-option">
+                    <label for="buttonTextColor" id="labelButtonTextColor">Button text color:</label>
+                    <input type="color" id="buttonTextColor" value="#000000">
+                </div>
+                
+                <div class="color-option">
+                    <label for="backgroundColor" id="labelBackgroundColor">Background color:</label>
+                    <input type="color" id="backgroundColor" value="#ffffff">
+                </div>
+                
+                <div class="color-option">
+                    <label for="userMessageColor" id="labelUserMessageColor">User message color:</label>
+                    <input type="color" id="userMessageColor" value="#e3e3e3">
+                </div>
+                
+                <div class="color-option">
+                    <label for="aiMessageColor" id="labelAiMessageColor">AI message color:</label>
+                    <input type="color" id="aiMessageColor" value="#e3e3e3">
+                </div>
+                
+                <div class="color-option">
+                    <label for="textColor" id="labelTextColor">Text color:</label>
+                    <input type="color" id="textColor" value="#000000">
+                </div>
+                
+                <button class="button" onclick="resetColors()" id="resetColorsButton">Reset colors</button>
+            </div>
+        </div>
+        <div class="chat-window" id="chatWindow">
+            <!-- Wiadomosci chatowe -->
+        </div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Type a message..." onkeydown="checkEnter(event)">
+        <div class="button-group">
+            <button class="button" onclick="sendMessage()" id="sendButton">Send</button>
+            <label for="fileInput" class="button" id="addImageButton">Add Image</label>
+            <input type="file" id="fileInput" accept="image/*" class="file-input" style="display: none;">
+        </div>
+    </div>
+    <script src="Jade.js"></script>
+    <script src="Logic.js"></script>
+</body>
+</html>
